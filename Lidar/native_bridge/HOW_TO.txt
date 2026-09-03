@@ -1,0 +1,79 @@
+NATIVE LIDAR PIPELINE (no Docker, ROS2, or RViz needed)
+=========================================================
+
+WHAT THIS IS
+------------
+A lightweight replacement for the Docker/ROS2/RViz setup in
+Dockerfile_Driver/. Talks to the LiDAR using Unitree's own SDK (compiled
+once into a tiny native program), and gives you two plain Python scripts:
+
+  visualize_lidar.py  - live 3D view of the point cloud
+  save_scan.py         - capture N seconds and save as a .ply file
+                          (saved directly into SMCODE\data\scans\)
+
+HOW IT WORKS
+------------
+  LiDAR sensor
+       | UDP, streams to 192.168.1.2:6201
+       v
+  Windows Ethernet adapter (192.168.1.2)
+       |
+  udp_relay.py  (Windows, forwards packets into WSL)
+       |
+  lidar_bridge  (WSL Ubuntu, native binary using the Unitree SDK,
+       |         parses the UDP stream into point clouds)
+  local TCP :9899
+       |
+  visualize_lidar.py / save_scan.py  (your normal Windows Python)
+
+The relay exists because WSL's default network doesn't own 192.168.1.2
+itself, so the sensor's data has to be forwarded in from the real
+Windows adapter.
+
+EVERY TIME YOU WANT TO USE IT
+------------------------------
+1. Open PowerShell.
+
+2. Go to this folder:
+   cd C:\Users\nikhi\Documents\SMART-MARK\Lidar\native_bridge
+
+3. Start the pipeline:
+   .\start_lidar.ps1
+
+   This starts both the WSL bridge and the Windows relay. Takes a few
+   seconds.
+
+4. Then run whichever you want:
+   python visualize_lidar.py
+   python save_scan.py --name 203
+   python save_scan.py --name 203 --seconds 20
+
+TO STOP:
+   .\start_lidar.ps1 -Stop
+
+
+TROUBLESHOOTING
+----------------
+
+- "Could not connect to lidar_bridge on 127.0.0.1:9899":
+  The bridge/relay isn't running. Run .\start_lidar.ps1 first.
+
+- No points captured / save_scan.py hangs:
+  Most likely the sensor itself isn't sending data. Check:
+    a) Windows Ethernet adapter shows "Up" with a link:
+       Get-NetAdapter -Name "Ethernet"
+    b) Windows can actually ping the sensor:
+       ping 192.168.1.62
+    c) The relay is actually receiving packets - check its log:
+       type relay.log
+       (should show growing "[N] ... bytes from ('192.168.1.62', 6101)"
+       lines; if it's silent, the sensor isn't transmitting - check its
+       power/cable)
+
+- After restarting your PC, WSL gets a new internal IP address. This is
+  handled automatically (udp_relay.py detects it at startup) - you don't
+  need to do anything, just run .\start_lidar.ps1 again.
+
+- If you ever need to rebuild lidar_bridge (e.g. you edited
+  lidar_bridge.cpp):
+    wsl -d Ubuntu -u root -- bash -c "cd /root/lidar_bridge && g++ -std=c++17 -O2 -Iinclude lidar_bridge.cpp -Llib/x86_64 -lunilidar_sdk2 -lpthread -o lidar_bridge"
