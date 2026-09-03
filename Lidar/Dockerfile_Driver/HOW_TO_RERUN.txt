@@ -1,0 +1,49 @@
+HOW TO RE-RUN THE LIDAR + RVIZ SETUP AFTER RESTARTING YOUR PC
+================================================================
+
+Everything (Docker image, WSL Ubuntu, network settings) survives a restart.
+You just need to start Docker and run the script again.
+
+STEPS:
+
+1. Open PowerShell.
+
+2. Go to this folder:
+   cd C:\Users\nikhi\Documents\SMART-MARK\Lidar\Dockerfile_Driver
+
+3. Run the script:
+   .\run_lidar.ps1
+
+   This will:
+   - Start Docker Desktop if it isn't already running (wait ~30-60 sec
+     the first time you see it doing this)
+   - Start the lidar container
+   - Launch the ROS2 driver + RViz inside it
+
+4. Wait a few seconds. The RViz window should pop up on your desktop
+   automatically (it may appear behind other windows - check your taskbar).
+
+That's it. Nothing else needs to be reconfigured (the network adapter
+IP, the WSL Ubuntu distro, and the Docker image are all already set up
+and persist across restarts).
+
+
+TO STOP IT:
+   .\run_lidar.ps1 -Stop
+
+
+TROUBLESHOOTING:
+
+- If PowerShell refuses to run the script ("execution policy" error):
+   powershell -ExecutionPolicy Bypass -File .\run_lidar.ps1
+
+- To check if the LiDAR driver / RViz are actually running and see logs:
+   wsl -d Ubuntu -u root -- docker exec unilidar cat /root/launch.log
+
+- To open a shell inside the running container:
+   wsl -d Ubuntu -u root -- docker exec -it unilidar bash
+
+- If the RViz window feels frozen or won't respond to mouse drags, it is
+  likely just very slow (software rendering, not real GPU acceleration
+  inside WSL for this app) - give it several seconds per action rather
+  than assuming it's broken.
