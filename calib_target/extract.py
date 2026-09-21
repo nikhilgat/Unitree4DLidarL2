@@ -2,6 +2,8 @@
 import argparse
 import csv
 import json
+import subprocess
+import sys
 import time
 from pathlib import Path
 
@@ -11,7 +13,7 @@ from .bag_io import apply_range_model, find_mcap, read_bag
 from .board import BoardSpec
 from .detect import Config, extract_target
 from .report import plot_detection
-from .viz import board_mask, save_scene_png, save_scene_ply, scene_colors, show
+from .viz import board_mask, save_scene_png, save_scene_ply, scene_colors
 
 
 def _bags(paths):
@@ -49,8 +51,8 @@ def main(argv=None):
     ap.add_argument("--square", type=float, default=0.095, help="nominal square size (m)")
     ap.add_argument("--range-offset", type=float, default=0.0, help="delta (m): r' = (r - delta) / kappa")
     ap.add_argument("--range-scale", type=float, default=1.0, help="kappa in r' = (r - delta) / kappa")
-    ap.add_argument("--show", action="store_true", help="open the interactive 3D viewer after each bag")
-    ap.add_argument("--no-scene", action="store_true", help="skip scene.ply / scene.png (faster, smaller)")
+    ap.add_argument("--no-show", action="store_true", help="do not open the interactive 3D viewer per bag")
+    ap.add_argument("--no-scene", action="store_true", help="skip scene.ply / scene.png / viewer (faster, smaller)")
     args = ap.parse_args(argv)
 
     spec = BoardSpec(args.cols, args.rows, args.square)
@@ -92,8 +94,10 @@ def main(argv=None):
             save_scene_png(d / "scene.png", xyz, rgb, mask, det, title=name)
             rec["board_points_in_scene"] = int(mask.sum())
         rows.append(rec)
-        if args.show and not args.no_scene:
-            show(d)
+        if not args.no_show and not args.no_scene:
+            # separate process so extraction keeps running while the window is open
+            subprocess.Popen([sys.executable, "-m", "calib_target.view", str(d)],
+                             cwd=Path(__file__).resolve().parents[1])
         print(f"{name}: {'OK ' if det.accepted else 'LOW'} ncc={det.ncc:.2f} sq={det.spec.square*1000:.0f}mm "
               f"dist={rec['distance_m']}m rms={det.plane_rms_mm:.1f}mm pts={det.n_points} ({time.time()-t:.0f}s)")
     keys = sorted({k for r in rows for k in r}, key=lambda k: ["bag", "frames", "found", "accepted"].index(k)

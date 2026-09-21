@@ -126,7 +126,10 @@ def show(result_dir, point_size=2.0, max_grey_voxel=0.01):
     sensor = o3d.geometry.TriangleMesh.create_coordinate_frame(size=0.15)
 
     vis = o3d.visualization.Visualizer()
-    vis.create_window(f"{d.name}  |  grey = scene, colour = detected checkerboard", 1400, 900)
+    if not vis.create_window(f"{d.name}  |  grey = scene, colour = detected checkerboard", 1400, 900):
+        print(f"[view] could not open a 3D window (no OpenGL display?). "
+              f"Open {d / 'scene.png'} or {d / 'scene.ply'} (CloudCompare) instead.")
+        return
     for g in (grey, board, lines, frame, sensor):
         vis.add_geometry(g)
     opt = vis.get_render_option()

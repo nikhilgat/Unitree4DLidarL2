@@ -18,12 +18,14 @@ Each bag also gets `scene.ply` (whole accumulated cloud grey, only the detected 
 intensity - open in CloudCompare) and `scene.png` (static views). Interactive Open3D viewer:
 
 ```
-python -m calib_target.view results\my_lidar_bag6      # after an extract run
-python -m calib_target.extract <rosbags> --out results --show   # open it after each bag
+python -m calib_target.extract <rosbags> --out results          # viewer opens per bag by itself
+python -m calib_target.view results\my_lidar_bag6      # reopen one later
 ```
+`extract` opens the viewer in its own window as soon as a bag is done (extraction keeps running);
+pass `--no-show` to suppress the windows.
 The viewer also draws the fitted pattern outline, the target frame (x red, y green, z blue) and the
 sensor origin. `board_points_in_scene` in the summary counts the coloured points. If the coloured
-patch does not sit on a checkered board in the scene, the detection is wrong. `--no-scene` skips it.
+patch does not sit on a checkered board in the scene, the detection is wrong. `--no-scene` skips all scene output.
 
 ## Method
 1. **Accumulate** all frames of the (static) bag; the L2 scan is non-repeating so density grows.
