@@ -54,3 +54,9 @@ def read_bag(bag, topic="/unilidar/cloud", max_frames=None, skip_frames=0):
                 inten.append(sc.get("intensity", np.zeros(len(p))).astype(np.float32))
                 used += 1
     return np.vstack(xyz), np.concatenate(inten), used
+
+
+def apply_range_model(xyz, kappa=1.0, delta=0.0):
+    """Map measured to corrected points along each ray: r' = (r - delta) / kappa."""
+    r = np.linalg.norm(xyz, axis=1, keepdims=True)
+    return (xyz / r * ((r - delta) / kappa)).astype(np.float32)

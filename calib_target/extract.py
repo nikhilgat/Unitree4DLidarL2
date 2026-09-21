@@ -7,7 +7,7 @@ from pathlib import Path
 
 import numpy as np
 
-from .bag_io import find_mcap, read_bag
+from .bag_io import apply_range_model, find_mcap, read_bag
 from .board import BoardSpec
 from .detect import Config, extract_target
 from .report import plot_detection
@@ -46,6 +46,8 @@ def main(argv=None):
     ap.add_argument("--cols", type=int, default=8)
     ap.add_argument("--rows", type=int, default=6)
     ap.add_argument("--square", type=float, default=0.095, help="nominal square size (m)")
+    ap.add_argument("--range-offset", type=float, default=0.0, help="delta (m): r' = (r - delta) / kappa")
+    ap.add_argument("--range-scale", type=float, default=1.0, help="kappa in r' = (r - delta) / kappa")
     args = ap.parse_args(argv)
 
     spec = BoardSpec(args.cols, args.rows, args.square)
@@ -57,6 +59,8 @@ def main(argv=None):
         name = bag.parent.name if bag.suffix == ".mcap" else bag.name
         t = time.time()
         xyz, inten, used = read_bag(bag, args.topic, args.frames)
+        if args.range_offset or args.range_scale != 1.0:
+            xyz = apply_range_model(xyz, args.range_scale, args.range_offset)
         det = extract_target(xyz, inten, spec, cfg)
         d = out / name
         d.mkdir(exist_ok=True)

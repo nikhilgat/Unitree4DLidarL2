@@ -29,12 +29,24 @@ Per bag it writes `results/<bag>/target.json` (transform, its inverse, quality m
 5. **Plausibility gate** (`plausible`): connected on-plane region must fit the board, be filled,
    and have 20-70 % dark points; `accepted` also needs NCC >= 0.4.
 
+## Range correction (empirical, opt-in)
+With the board confirmed as one fixed 95 mm print, the fitted square size still grew from ~105 mm
+(2.2 m) to ~123 mm (0.94 m). That is a distance-dependent scale error in the point cloud. A
+per-ray model `r' = (r - delta) / kappa` fitted over the 9 accepted detections gives
+`delta = 0.245 m, kappa = 0.956` (1.2 mm rms residual on the square size), and re-running with it
+gives 96-100 mm squares at 0.75-2.0 m:
+
+```
+python -m calib_target.extract <rosbags> --out results --range-offset 0.245 --range-scale 0.956
+```
+It is **not** applied by default: it is fitted to the board size, so it is not independent proof.
+Validate it with a tape-measured sensor-to-board distance (e.g. bag 6 reads 0.94 m raw, 0.75 m
+corrected) before using the transforms as an extrinsic. NCC did not improve with it (sizes did).
+
 ## Known limitations / open points
 - **180 deg ambiguity**: an even x even checker looks identical rotated 180 deg about its normal.
   `T_lidar_target_alt` is the other solution; pick with an external cue (e.g. which board edge is up).
-- **Square size**: the fitted square size is ~106-123 mm, not the stated 95 mm, and grows as the
-  board gets closer (see `scale`/`square_mm` in the summary). Origin of this is unresolved
-  (different board vs. distance-dependent range scale) - measure a printed square with a ruler.
+- **Square size** without the range correction is 105-123 mm, not 95 mm (see above).
 - Which plane is "true" (white vs dark returns) is not known without an external reference; the
   white (saturated) surface is used.
 - Boards near the sensor's zenith, far away (>2 m) or sparsely sampled can score low (bag 9).
