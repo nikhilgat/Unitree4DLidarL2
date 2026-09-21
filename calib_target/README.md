@@ -1,7 +1,13 @@
 # calib_target - checkerboard extraction from Unitree L2 rosbags
 
+**Quick start:** open the worktree folder in VS Code, edit the constants at the top of `main.py`
+(bag folder, board size, range correction, ...) and press **F5** (or `python main.py`). All bags are
+processed silently, no windows open; results go to `results/`.
+
 Finds the checkerboard in each rosbag (`/unilidar/cloud`, mcap) and estimates `T_lidar_target`
 (target -> LiDAR, 4x4).
+
+Shell equivalent (no `main.py`):
 
 ```
 python -m calib_target.extract C:\path\to\rosbags --out results          # all bags
@@ -18,11 +24,10 @@ Each bag also gets `scene.ply` (whole accumulated cloud grey, only the detected 
 intensity - open in CloudCompare) and `scene.png` (static views). Interactive Open3D viewer:
 
 ```
-python -m calib_target.extract <rosbags> --out results          # viewer opens per bag by itself
-python -m calib_target.view results\my_lidar_bag6      # reopen one later
+python -m calib_target.view results\my_lidar_bag6      # optional interactive Open3D window
+python -m calib_target.extract <rosbags> --out results --show   # CLI only: open one per bag
 ```
-`extract` opens the viewer in its own window as soon as a bag is done (extraction keeps running);
-pass `--no-show` to suppress the windows.
+`main.py` never opens windows; open `scene.ply` in any viewer (VS Code PLY extension, CloudCompare).
 The viewer also draws the fitted pattern outline, the target frame (x red, y green, z blue) and the
 sensor origin. `board_points_in_scene` in the summary counts the coloured points. If the coloured
 patch does not sit on a checkered board in the scene, the detection is wrong. `--no-scene` skips all scene output.
