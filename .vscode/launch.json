@@ -9,6 +9,15 @@
       "console": "integratedTerminal",
       "cwd": "${workspaceFolder}",
       "justMyCode": true
+    },
+    {
+      "name": "View results (view_results.py)",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/view_results.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "justMyCode": true
     }
   ]
 }

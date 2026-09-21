@@ -3,6 +3,8 @@
 **Quick start:** open the worktree folder in VS Code, edit the constants at the top of `main.py`
 (bag folder, board size, range correction, ...) and press **F5** (or `python main.py`). All bags are
 processed silently, no windows open; results go to `results/`.
+Then run `view_results.py` (pick **View results** in the F5 dropdown) for one window with a list of
+all bags: click a bag to see the whole cloud in grey with only the checkerboard coloured.
 
 Finds the checkerboard in each rosbag (`/unilidar/cloud`, mcap) and estimates `T_lidar_target`
 (target -> LiDAR, 4x4).
@@ -24,7 +26,8 @@ Each bag also gets `scene.ply` (whole accumulated cloud grey, only the detected 
 intensity - open in CloudCompare) and `scene.png` (static views). Interactive Open3D viewer:
 
 ```
-python -m calib_target.view results\my_lidar_bag6      # optional interactive Open3D window
+python view_results.py                                  # one window, pick any bag from a list
+python -m calib_target.view results\my_lidar_bag6      # single-bag Open3D window
 python -m calib_target.extract <rosbags> --out results --show   # CLI only: open one per bag
 ```
 `main.py` never opens windows; open `scene.ply` in any viewer (VS Code PLY extension, CloudCompare).
