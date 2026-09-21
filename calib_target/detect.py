@@ -54,7 +54,7 @@ class Detection:
     coverage: float
     n_points: int
     plane_rms_mm: float               # after walk correction
-    walk_mm: float                    # offset of the darkest returns vs white (signed, toward sensor +)
+    walk_mm: float                    # plane offset of typical dark-square returns (I=130) vs white, toward sensor +
     walk_curve: np.ndarray            # (K,2) intensity, offset mm
     dark_first: bool
     spec: BoardSpec                   # board with the fitted square size
@@ -103,7 +103,7 @@ def _walk_curve(inten, d):
     xs, ys = [], []
     for lo, hi in zip(_WALK_EDGES[:-1], _WALK_EDGES[1:]):
         m = (inten >= lo) & (inten < hi)
-        if m.sum() >= 40:
+        if m.sum() >= 200:
             xs.append(np.median(inten[m]))
             ys.append(np.median(d[m]))
     if not xs or xs[-1] < WHITE_I:            # pin the saturated reference to zero
@@ -332,7 +332,7 @@ def _finalize(P, I, c, e1, e2, n, phi, tu, tv, spec, k, ncc, cov, dark_first, ct
     return Detection(
         T_lidar_target=T, T_lidar_target_alt=Talt, ncc=float(ncc), coverage=float(cov),
         n_points=int(sel.sum()), plane_rms_mm=float(np.sqrt(np.mean(resid ** 2))),
-        walk_mm=float(1000 * curve[1][0]), walk_curve=np.column_stack([curve[0], curve[1] * 1000]),
+        walk_mm=float(1000 * np.interp(130.0, curve[0], curve[1])), walk_curve=np.column_stack([curve[0], curve[1] * 1000]),
         dark_first=bool(dark_first), spec=spec, scale=float(k), seed_centre=ctr0,
         sheet_dims=dims, sheet_fill=fill, dark_frac=dark_frac,
         board_points=Pc[sel], board_intensity=I[sel])

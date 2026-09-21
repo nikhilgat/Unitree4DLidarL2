@@ -13,6 +13,18 @@ Per bag it writes `results/<bag>/target.json` (transform, its inverse, quality m
 `board.ply` (on-board points, walk-corrected, intensity as grey) and `detection.png`; plus
 `results/summary.csv`. Check `accepted` and `detection.png` before trusting a bag.
 
+## 3D verification (grey scene, coloured board)
+Each bag also gets `scene.ply` (whole accumulated cloud grey, only the detected board coloured by
+intensity - open in CloudCompare) and `scene.png` (static views). Interactive Open3D viewer:
+
+```
+python -m calib_target.view results\my_lidar_bag6      # after an extract run
+python -m calib_target.extract <rosbags> --out results --show   # open it after each bag
+```
+The viewer also draws the fitted pattern outline, the target frame (x red, y green, z blue) and the
+sensor origin. `board_points_in_scene` in the summary counts the coloured points. If the coloured
+patch does not sit on a checkered board in the scene, the detection is wrong. `--no-scene` skips it.
+
 ## Method
 1. **Accumulate** all frames of the (static) bag; the L2 scan is non-repeating so density grows.
 2. **Propose** planar segments by normal-consistent region growing (`segment.py`) that could be the sheet.
